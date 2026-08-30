@@ -22,7 +22,7 @@ The project explores multi-modal imitation learning for fine-manipulation harves
 2. **Diffusion Policy** (Trained from scratch, accelerated with 5-step DDIM sampling)
 3. **SmolVLA** (450M-parameter Vision-Language-Action foundation model, fine-tuned from `lerobot/smolvla_base`)
 
-Through a staged fine-tuning paradigm combined with a decoupled asynchronous inference architecture, the final multi-task **SmolVLA** model achieved a **100% success rate (30/30 episodes)** on physical strawberry harvesting and block manipulation benchmarks without catastrophic forgetting.
+Through a staged fine-tuning paradigm combined with a decoupled asynchronous inference architecture, the final multi-task **SmolVLA** model achieved an **80% success rate (8/10 trials, 95% Wilson CI approximately 49–94%)** on the physical strawberry pick-and-place task, meeting the original proposal's own ≥80% pick-success target on the descoped system. Both observed failures fell in the known bottom-tip slip zone.
 
 ```
                   ┌────────────────────────────────────────────────────────┐
@@ -45,7 +45,7 @@ Through a staged fine-tuning paradigm combined with a decoupled asynchronous inf
                                                │ ZeroMQ / TCP Local Socket (127.0.0.1:8080)
                                                ▼
 ┌───────────────────────────────────────────────────────────────────────────────────────────┐
-│                           ROBOT CLIENT (30 Hz CONTROL LOOP)                               │
+│                     ROBOT CLIENT (ASYNC CONTROL LOOP, NO FIXED RATE)                      │
 │                                                                                           │
 │       Action Buffer: Chunk Threshold (0.3) + Weighted Averaging Blend                     │
 │                                              │                                            │
@@ -58,20 +58,27 @@ Through a staged fine-tuning paradigm combined with a decoupled asynchronous inf
 
 ## 🏆 Key Experimental Results
 
-### Real-Robot Policy Comparison (Blue Cube Pick & Place)
-Evaluated on the physical SO-101 follower arm under identical task and lighting conditions:
+### v1 Real-Robot Evaluation (Blue Cube Pick & Place)
+The project's first demonstration dataset (v1) produced poor real-robot results, later root-caused to a physically shifted wrist-camera mount rather than a training or data-quality problem:
 
-| Metric | ACT v2 (`act_mir1_v2`) | Diffusion Policy (`diffusion_mir1_v2`) | SmolVLA Baseline (`smolvla_mir1_v2`) | SmolVLA Final (`smolvla_mir1_strawberry`) |
-|---|:---:|:---:|:---:|:---:|
-| **Architecture** | Transformer C-VAE | Denoising Diffusion | 450M VLA Base | 450M VLA Multi-Task |
-| **Training Paradigm** | From Scratch | From Scratch | Fine-tuned from Base | Staged Fine-tuning |
-| **Training Steps** | 30,000 | 30,000 | 20,000 | +10,000 |
-| **Control Frequency** | ~25 Hz | ~13–14.5 Hz (DDIM 5) | ~4.5 Hz (Sync) / 30 Hz (Async) | **30 Hz (Async)** |
-| **Task: Blue Cube** | 6 / 10 (60.0%) | 7 / 10 (70.0%) | 9 / 10 (90.0%) | **10 / 10 (100.0%)** |
-| **Task: Strawberry** | N/A | N/A | N/A | **10 / 10 (100.0%)** |
-| **Overall Staged Eval** | — | — | — | **30 / 30 (100.0%)** |
+| Policy | Result | Observed Failure Pattern |
+|---|:---:|---|
+| ACT | 1 / 10 | Approach good, grasp does not close correctly |
+| Diffusion Policy (DDIM-5, ~12–14 Hz) | 4 / 10 | Same pattern, less consistently than ACT |
 
-> **Confidence Interval:** The final staged SmolVLA evaluation achieved 30 successes in 30 trials, corresponding to a 95% Wilson score confidence interval of **[88.6%, 100.0%]**.
+After the camera fix, all three policies were retrained on the v2 dataset (42 episodes). **No formal per-episode success/failure table was logged for the v2 round** — that gap is stated plainly here rather than filled with an invented number (see the thesis report, Section 9.2).
+
+### Final Evaluation (Strawberry Pick & Place)
+The final, staged-fine-tuned **SmolVLA** model (`smolvla_mir1_strawberry`) was evaluated on ten formal trials after the last fine-tuning round:
+
+| Metric | Value |
+|---|:---:|
+| **Success rate** | 8 / 10 (80%) |
+| **95% Wilson score CI** | [49%, 94%] |
+| **Control architecture** | Asynchronous (decoupled, no fixed rate) |
+| **Failure mode** | Both failures: grasp attempted in the known bottom-tip slip zone |
+
+> This is reported as a **pilot-scale result, not a validated benchmark** — a claim intended to stand as a benchmark-grade figure would need on the order of 50–100+ trials to meaningfully narrow this interval. See the thesis report, Section 10.3 and Section 14.2, and `evaluation/eval_results_blacktip_strawberry.md` in this repository.
 
 ---
 
@@ -153,8 +160,8 @@ All model checkpoints and datasets are published under the [`Akshit03`](https://
 ### 1. Environment Setup
 Clone the repository and install dependencies in a conda environment:
 ```bash
-git clone https://github.com/Akshit03/lerobot-strawberry-harvesting.git
-cd lerobot-strawberry-harvesting
+git clone https://github.com/akshitharsola/learning-to-pick-lerobot-so101.git
+cd learning-to-pick-lerobot-so101
 
 conda create -n lerobot python=3.10 -y
 conda activate lerobot
@@ -192,13 +199,13 @@ cd evaluation
 ## 🛠️ Engineering Innovations & Technical Solutions
 
 1. **Overcoming VLA Latency via Decoupled Asynchronous Execution:**  
-   Direct synchronous rollout of SmolVLA on consumer workstation GPUs throttled control loops to ~4.5 Hz due to heavy transformer backbone forward passes (~220 ms latency). We implemented a decoupled asynchronous architecture with sliding action chunk queues (`chunk_size_threshold=0.3`) and weighted averaging, sustaining smooth 30 Hz physical control.
+   Direct synchronous rollout of SmolVLA (`lerobot-rollout`) on the evaluation hardware was measured at only ~4.3–4.7 Hz, unusable for live control. Using LeRobot's asynchronous PolicyServer/RobotClient workflow instead (`chunk_size_threshold=0.3`) decouples inference from the control loop entirely — actions are queued and blended rather than the robot waiting on each forward pass, so there is no single fixed control-rate figure to report for this policy (Section 7.4, thesis report).
 
 2. **Diffusion Sampling Acceleration:**  
    Standard DDPM sampling (100 denoising steps) collapsed real-time control to **0.9 Hz**. By re-configuring inference to 5-step DDIM (Denoising Diffusion Implicit Models), loop frequency rose to **13.5 Hz**, boosting grasp success from 10% to 70%.
 
 3. **Staged Fine-Tuning & Grasp Heuristic Transfer:**  
-   To prevent mechanical bruising of delicate fruit with rigid 3D-printed grippers, we introduced a rigid strawberry prop paired with an imitation grasp rule (targeting the stem/hook and mid-body, avoiding the apex). Staged fine-tuning successfully transferred this spatial constraint to the policy with 100% empirical harvest reliability and zero regression on prior tasks.
+   Real strawberries were tried and abandoned after the gripper crushed or tore the fruit on contact; a compliant gripper fingertip was judged infeasible within the project's remaining time. The project reverted to a printed strawberry prop, paired with a hard grasp rule enforced during recording (grasp only at the stem/hook or mid-body, never the bottom tip — the prop's known slip zone). The final evaluation's two failures both fell in that excluded zone, suggesting the policy learned most of the intended grasp-point behaviour, with one narrow, repeatable residual failure mode rather than failures spread unpredictably.
 
 4. **Embedded Resource Management:**  
    Training large diffusion policies on the Jetson AGX Orin (~8 GB free eMMC) risked out-of-disk crashes. We implemented an automated background pruner daemon polling every 15 seconds to safely bound local storage while streaming checkpoints to Hugging Face Hub.

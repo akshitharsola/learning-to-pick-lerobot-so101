@@ -42,7 +42,7 @@ recording/
 - `v1_deprecated/` scripts are retained in this repository for full scientific transparency and engineering failure analysis.
 
 ### Validated v2 Recordings:
-- The wrist camera was re-seated, rigidly bolted in place, and verified via [`diagnostics/live_camera_check.py`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/diagnostics/live_camera_check.py).
+- The wrist camera was re-seated, rigidly bolted in place, and verified via `diagnostics/live_camera_check.py`.
 - 7 new sessions (`record_session_v2_1.sh` through `record_session_v2_7.sh`) were recorded, providing **42 flawless demonstration episodes (33,353 frames)**.
 
 ---

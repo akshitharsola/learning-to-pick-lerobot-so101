@@ -11,9 +11,9 @@ In LeRobot 0.5.2+, multi-session demonstration recordings stored on the Hugging 
 
 | Script | Source Sessions / Datasets | Aggregated Output Dataset | Total Episodes / Frames |
 |---|---|---|---|
-| [`aggregate_v2.py`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/training/aggregate_v2.py) | 7 v2 sessions (`session_v2_1` through `session_v2_7`) | `Akshit03/AkshitMajorProjectMIR1_v2_combined` | 42 episodes / 33,353 frames |
-| [`aggregate_blacktip_cube.py`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/training/aggregate_blacktip_cube.py) | `v2_combined` + `blacktip_fix_session1` + `cube_topup_session1` | `Akshit03/AkshitMajorProjectMIR1_cube_blacktip_combined` | 60 episodes / 43,563 frames |
-| [`aggregate_strawberry.py`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/training/aggregate_strawberry.py) | `cube_blacktip_combined` + 3 printed strawberry sessions | `Akshit03/AkshitMajorProjectMIR1_cube_strawberry_combined` | 84 episodes / 59,865 frames |
+| `aggregate_v2.py` | 7 v2 sessions (`session_v2_1` through `session_v2_7`) | `Akshit03/AkshitMajorProjectMIR1_v2_combined` | 42 episodes / 33,353 frames |
+| `aggregate_blacktip_cube.py` | `v2_combined` + `blacktip_fix_session1` + `cube_topup_session1` | `Akshit03/AkshitMajorProjectMIR1_cube_blacktip_combined` | 60 episodes / 43,563 frames |
+| `aggregate_strawberry.py` | `cube_blacktip_combined` + 3 printed strawberry sessions | `Akshit03/AkshitMajorProjectMIR1_cube_strawberry_combined` | 84 episodes / 59,865 frames |
 
 **Aggregation Workflow in Code:**
 1. Pre-downloads source datasets to cache via `LeRobotDataset(repo_id)`.
@@ -26,10 +26,10 @@ In LeRobot 0.5.2+, multi-session demonstration recordings stored on the Hugging 
 
 | Script | Target Policy | Base Weights | Dataset Used | Steps | Batch Size | Wall Clock (Jetson) |
 |---|---|---|---|:---:|:---:|:---:|
-| [`train_all_v2.sh`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/training/train_all_v2.sh) | ACT, Diffusion, SmolVLA | Scratch (ACT/Diff) / `lerobot/smolvla_base` | `v2_combined` | 30k / 30k / 20k | 8 / 8 / 64 | ~72h total sequence |
-| [`train_smolvla_only.sh`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/training/train_smolvla_only.sh) | SmolVLA (Baseline) | `lerobot/smolvla_base` | `v2_combined` | 20,000 | 64 | ~61h 36m |
-| [`train_smolvla_blacktip_fix.sh`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/training/train_smolvla_blacktip_fix.sh) | SmolVLA (Bugfix) | `Akshit03/smolvla_mir1_v2` | `cube_blacktip_combined` | 8,000 | 64 | ~24h 42m |
-| [`train_smolvla_strawberry.sh`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/training/train_smolvla_strawberry.sh) | SmolVLA (Harvesting) | `Akshit03/smolvla_mir1_v2` | `cube_strawberry_combined` | 10,000 | 64 | ~30h 48m |
+| `train_all_v2.sh` | ACT, Diffusion, SmolVLA | Scratch (ACT/Diff) / `lerobot/smolvla_base` | `v2_combined` | 30k / 30k / 20k | 8 / 8 / 64 | ~72h total sequence |
+| `train_smolvla_only.sh` | SmolVLA (Baseline) | `lerobot/smolvla_base` | `v2_combined` | 20,000 | 64 | ~61h 36m |
+| `train_smolvla_blacktip_fix.sh` | SmolVLA (Bugfix) | `Akshit03/smolvla_mir1_v2` | `cube_blacktip_combined` | 8,000 | 64 | ~24h 42m |
+| `train_smolvla_strawberry.sh` | SmolVLA (Harvesting) | `Akshit03/smolvla_mir1_v2` | `cube_strawberry_combined` | 10,000 | 64 | ~30h 48m |
 
 ---
 

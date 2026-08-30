@@ -1,39 +1,42 @@
-# Empirical Evaluation Results — Baseline Comparison (ACT vs Diffusion vs SmolVLA)
+# Empirical Evaluation Results — v1 Failure and v2 Root-Cause Analysis
 
-**Task:** *"Pick up the blue block and place in the yellow bin"*  
-**Platform:** SO-101 6-DoF Follower Robot Arm with Feetech STS3215 Servos  
+**Task:** *"Pick up the blue block and place in the yellow bin"*
+**Platform:** SO-101 6-DoF Follower Robot Arm with Feetech STS3215 Servos
 **Perception:** Dual USB RGB Cameras (Logitech C170 Top Overhead + Generic 180° Inverted Wrist)
 
 ---
 
-## 1. Summary Comparison Table
+## 1. v1 Real-Robot Evaluation Results
 
-| Metric / Policy | ACT Baseline (`act_mir1_v2`) | Diffusion Policy (`diffusion_mir1_v2`) | SmolVLA Baseline (`smolvla_mir1_v2`) |
-|---|---|---|---|
-| **Architecture** | Transformer C-VAE Encoder-Decoder | Denoising Diffusion Probabilistic / DDIM | 450M Vision-Language-Action (VLA) |
-| **Pretrained Base** | None (Trained from scratch) | None (Trained from scratch) | `lerobot/smolvla_base` (10M real frames) |
-| **Training Steps** | 30,000 steps | 30,000 steps | 20,000 steps |
-| **Training Hardware** | NVIDIA Jetson AGX Orin | NVIDIA Jetson AGX Orin | NVIDIA Jetson AGX Orin |
-| **Control Loop Hz** | ~25 Hz (Synchronous) | ~13–14.5 Hz (DDIM 5 steps) | ~30 Hz (Asynchronous Server/Client) |
-| **Success Rate** | **6 / 10 (60%)** | **7 / 10 (70%)** | **9 / 10 (90%)** |
-| **Primary Failure Mode** | Final centimeter grasp alignment | Execution speed / slight trajectory lag | Occasional gripper release on black-tip |
+Two policies, ACT and Diffusion Policy, were trained on the original 42-episode v1 dataset and evaluated on the real robot. Both produced poor results:
+
+| Policy | Result | Observed Failure Pattern |
+|---|---|---|
+| ACT | 1 / 10 | Approach good, gripper reaches the target, grasp does not close correctly: nine consecutive failures with the identical pattern |
+| Diffusion Policy (DDIM-5, ~12–14 Hz) | 4 / 10 | Same "approach good, grasp missed" pattern, though less consistently than ACT |
+
+The root cause was traced to a physically shifted wrist-camera mount (Section 9.1 of the thesis report), not a training or data-quality problem. v1's data and models were discarded and are not reused in any later round.
 
 ---
 
-## 2. Investigation of v1 Hardware Discrepancy
+## 2. v2 Round: Three-Policy Training
 
-During initial v1 testing, both ACT and Diffusion exhibited low grasp rates (1/10 and 4/10 respectively). Systematic failure analysis revealed that the **wrist camera mount had physically shifted** relative to the gripper assembly after calibration.
+Following the camera fix, all three policies were trained/fine-tuned on the 42-episode v2 dataset. Training configuration:
 
-- Re-mounting and rigidly securing the camera restored spatial alignment.
-- Re-recorded 7 clean sessions (42 episodes, 33,353 frames) in dataset `v2_combined`.
-- Re-trained all policies, resulting in the validated v2 outcomes above.
+| Policy | Steps | Wall-Clock Time |
+|---|:---:|:---:|
+| ACT | 30,000 | 5h 08m |
+| Diffusion Policy | 30,000 | 6h 37m |
+| SmolVLA | 20,000 (fine-tuned from `lerobot/smolvla_base`) | 61h 36m |
+
+The v2-round real-robot evaluation was reported informally at the time as favourable for SmolVLA, but **no formal, per-episode success/failure table was logged for this round** — the evaluation-results document template prepared for this purpose was left blank. That gap is stated here plainly rather than filled with an invented number. What the evaluation did surface, informally but concretely, was the gripper-release fault near light- and dark-contact areas that motivated Round 3 of data collection.
 
 ---
 
 ## 3. Diffusion Sampling Acceleration Analysis
 
-In standard rollout mode with DDPM (100 denoising steps), the real-robot control loop collapsed to **0.9 Hz** due to forward-pass computation latency, leading to aborted runs. 
-
-Transitioning to DDIM (Denoising Diffusion Implicit Models) sampling yielded:
+In standard rollout mode with DDPM (100 denoising steps), the real-robot control loop dropped to an unusable **0.9 Hz**. Switching to DDIM sampling improved this substantially:
 - **DDIM 10 steps:** ~7.8 Hz
-- **DDIM 5 steps:** ~13–14.5 Hz (selected for final benchmark)
+- **DDIM 5 steps:** ~12–14 Hz (selected for evaluation)
+
+This is roughly half of ACT's ~25 Hz control rate, reflecting the trade-off between Diffusion Policy's representational flexibility and its inference cost.

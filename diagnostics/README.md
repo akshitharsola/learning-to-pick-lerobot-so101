@@ -8,7 +8,7 @@ This directory contains diagnostic utilities for hardware validation, camera ind
 
 | Script | Purpose | Dependencies |
 |---|---|---|
-| [`live_camera_check.py`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/diagnostics/live_camera_check.py) | Real-time dual-camera visualization stream using Rerun | `opencv-python`, `rerun-sdk` |
+| `live_camera_check.py` | Real-time dual-camera visualization stream using Rerun | `opencv-python`, `rerun-sdk` |
 
 ---
 
@@ -19,7 +19,7 @@ On Linux workstations configured with headless Python environments, standard `cv
 cv2.error: OpenCV(4.x) ... The function is not implemented. Rebuild the library with Windows, GTK+ 2.x or Cocoa support.
 ```
 To bypass this limitation without recompiling OpenCV:
-- [`live_camera_check.py`](file:///Users/akshitharsola/Documents/GALWAY/IR_PRoject/Machines/thesis-code/diagnostics/live_camera_check.py) connects to the top overhead camera (`/dev/video0`) and wrist camera (`/dev/video2`).
+- `live_camera_check.py` connects to the top overhead camera (`/dev/video0`) and wrist camera (`/dev/video2`).
 - Applies a hardware-compensating **180° rotation** to the inverted wrist camera frame.
 - Logs both RGB video streams in real time to the **Rerun** visualizer (`rr.init("camera_check", spawn=True)`), rendering smooth live visual feeds in native GUI or web browser.
 

@@ -18,7 +18,7 @@ evaluation/
 ├── timing_check_strawberry.sh         # Sync control-loop Hz benchmark (strawberry model)
 ├── DEMO.md                            # Complete presentation walkthrough and talking points
 ├── eval_results.md                    # Baseline evaluation empirical results (ACT vs Diffusion)
-└── eval_results_blacktip_strawberry.md # Staged fine-tuning evaluation results (30/30 successes)
+└── eval_results_blacktip_strawberry.md # Final policy evaluation results (8/10 trials, 95% CI 49-94%)
 ```
 
 ---
@@ -32,10 +32,12 @@ When deploying Vision-Language-Action models such as **SmolVLA** (450M parameter
 - Jerky, intermittent physical movement and high grasp failure rates.
 
 ### The LeRobot PolicyServer / RobotClient Solution
-To achieve smooth, real-time 30 Hz control:
+To decouple inference latency from the robot's control loop:
 1. **`async_smolvla_server.sh`**: Runs in the background, computing action chunks asynchronously on the GPU.
-2. **`async_strawberry_client.sh`**: Runs the 30 Hz robot control loop, pulling action chunks from the server queue.
+2. **`async_strawberry_client.sh`**: Runs the robot control loop, pulling already-computed action chunks from the server queue as they become available rather than waiting on each inference call.
 3. **Queue Thresholding**: Configured with `--chunk_size_threshold=0.3` and `--aggregate_fn_name=weighted_average` to smoothly blend successive overlapping action chunks without stalling the arm.
+
+This architecture has no single fixed control-rate figure to report — that's the point: it isn't locked to one fixed rate the way the synchronous ACT (~25 Hz) and Diffusion Policy (~13 Hz) loops are (Section 7.4, thesis report).
 
 ---
 

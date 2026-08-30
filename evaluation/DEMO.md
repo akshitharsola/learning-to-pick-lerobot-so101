@@ -61,7 +61,7 @@ cd evaluation
 
 2. **Asynchronous Decoupled Inference**:
    - Synchronous execution on VLM architectures drops the control loop to ~4.5 Hz (unusable for real-time robotic grasping).
-   - The decoupled PolicyServer / RobotClient architecture buffers action chunks with a sliding window threshold (`chunk_size_threshold=0.3`) and weighted averaging, enabling smooth, uninterrupted 30 Hz motor execution.
+   - The decoupled PolicyServer / RobotClient architecture buffers action chunks with a sliding window threshold (`chunk_size_threshold=0.3`) and weighted averaging, enabling smooth motor execution without the robot stalling on each inference call.
 
 3. **Staged Fine-Tuning Strategy**:
    - Initial cube policy fine-tuning (Round 2: 20k steps).
@@ -69,4 +69,4 @@ cd evaluation
    - Multi-task strawberry harvesting fine-tuning (Round 4: 10k steps) enforcing a hook/middle-body grasp rule to prevent fruit bruising and slippage.
 
 4. **Experimental Outcomes**:
-   - **30/30 (100%)** successful pick-and-place episodes across all final evaluation campaigns.
+   - **8/10 (80%)** successful pick-and-place trials in the final formal evaluation, 95% Wilson CI approximately 49–94% — meeting the original proposal's ≥80% pick-success target. Both failures fell in the known bottom-tip slip zone. See `evaluation/eval_results_blacktip_strawberry.md` for full detail.
