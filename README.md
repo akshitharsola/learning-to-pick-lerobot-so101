@@ -17,6 +17,8 @@ This repository contains the complete software pipeline, training orchestration 
 > **Institution:** School of Engineering, University of Galway  
 > **Submission Date:** August 2026  
 
+📄 **[Read the full thesis report (PDF)](thesis.pdf)**
+
 The project explores multi-modal imitation learning for fine-manipulation harvesting tasks using low-cost open-source hardware. We conduct a rigorous comparative study across three state-of-the-art imitation learning paradigms:
 1. **Action Chunking with Transformers (ACT)** (Trained from scratch)
 2. **Diffusion Policy** (Trained from scratch, accelerated with 5-step DDIM sampling)
