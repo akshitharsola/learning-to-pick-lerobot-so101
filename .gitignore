@@ -1,0 +1,24 @@
+# Vendored dependencies
+lerobot/
+LeRobot/
+
+# Datasets, videos, checkpoints, model weights
+*.mp4
+*.safetensors
+*.parquet
+data/
+outputs/
+eval_results/
+eval_policies*/
+
+# Training logs (large, regenerable)
+logs/
+*.log
+
+# OS / editor cruft
+.DS_Store
+.claude/
+__pycache__/
+*.pyc
+.venv/
+venv/
