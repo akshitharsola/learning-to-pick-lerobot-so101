@@ -1,0 +1,21 @@
+# Core Robotics & Machine Learning Dependencies
+# Used for EE5111 Major Project: Robotic Strawberry Harvesting on LeRobot SO-101
+
+# Hugging Face Hub and LeRobot ecosystem (pinned to v0.5.2 compatibility)
+huggingface_hub>=0.23.0
+draccus>=0.8.0
+rerun-sdk>=0.15.0
+
+# Computer Vision & Perception
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# Dataset Processing & Parquet metadata
+pandas>=2.0.0
+pyarrow>=14.0.0
+
+# Deep Learning (install CUDA-matched torch wheels per platform instructions)
+# torch>=2.1.0,<2.12.0
+# torchvision>=0.16.0
+# transformers>=4.40.0 (required for SmolVLA)
